@@ -223,7 +223,6 @@ async def on_message(message):
                     currRole = serverRoles[i];
                     if( (i > 0 and findRoleIndex(currRole.name,author.roles) == -1 and currRole.position < message.server.me.roles[botRoleIndex].position) and (currRole != membersRole)):
                             outp += "\t" + currRole.name + "\n";                            
-                print(len(outp))
                 if(len(outp) > 20):
                     await client.send_message(channel,outp);
                 else:
