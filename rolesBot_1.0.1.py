@@ -416,8 +416,5 @@ else:
     sys.exit(0);
 
 #Checks if token is valid and boots bot
-try:
-    client.run(TOKEN);
-except:
-    print("\nSomething went wrong in the discord client, if an error is above this message than that is the problem otherwise there is an invalid token in or network" + local + "/token.txt. Or your internet went down")
-    sys.exit(0);    
+client.run(TOKEN);
+  
