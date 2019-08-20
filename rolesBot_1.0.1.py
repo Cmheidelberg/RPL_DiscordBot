@@ -3,7 +3,7 @@ from discord.ext import commands
 import csv
 import os
 import sys
-import tkinter as tk
+
 
 #Global variables
 client = commands.Bot(command_prefix = '!')
