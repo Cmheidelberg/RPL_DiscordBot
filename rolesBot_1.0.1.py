@@ -77,7 +77,7 @@ async def on_ready():
     try:
         serverRoles = client.get_server(serverID).roles;
     except:
-        print("Invalid serverID in token.txt file");
+        print("Invalid serverID in token.txt file: " + str(serverID));
 
     #Finds members and core roles
     membersRole = findRoleIndex("members",serverRoles);
