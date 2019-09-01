@@ -3,7 +3,7 @@ from discord.ext import commands
 import csv
 import os
 import sys
-import tkinter as tk
+
 
 #Global variables
 client = commands.Bot(command_prefix = '!')
@@ -77,7 +77,7 @@ async def on_ready():
     try:
         serverRoles = client.get_server(serverID).roles;
     except:
-        print("Invalid serverID in token.txt file");
+        print("Invalid serverID in token.txt file: " + str(serverID));
 
     #Finds members and core roles
     membersRole = findRoleIndex("members",serverRoles);
@@ -223,7 +223,6 @@ async def on_message(message):
                     currRole = serverRoles[i];
                     if( (i > 0 and findRoleIndex(currRole.name,author.roles) == -1 and currRole.position < message.server.me.roles[botRoleIndex].position) and (currRole != membersRole)):
                             outp += "\t" + currRole.name + "\n";                            
-                print(len(outp))
                 if(len(outp) > 20):
                     await client.send_message(channel,outp);
                 else:
@@ -365,19 +364,19 @@ async def on_message(message):
                     
                 if(member):
                     outp += "**Member Commands:**\n"
-                    outp += "\t!help (level) - leave arg blank for a list of member commands or use \"core\" to list all commands\n";
-                    outp += "\t!join (role) - adds you to the given role. If arg \"all\" is given then it adds you to all available roles\n";
-                    outp += "\t!leave (role) - removes you from the given role\n";
-                    outp += "\t!listRoles - lists all joinable roles\n";
-                    outp += "\t!unjoinedRoles - lists all roles you have not joined\n";
-                    outp += "\t!myRoles - lists the roles you are currently in\n";
+                    outp += "- !help (level) - leave arg blank for a list of member commands or use \"core\" to list all commands\n";
+                    outp += "- !join (role) - adds you to the given role. If arg \"all\" is given then it adds you to all available roles\n";
+                    outp += "- !leave (role) - removes you from the given role\n";
+                    outp += "- !listRoles - lists all joinable roles\n";
+                    outp += "- !unjoinedRoles - lists all roles you have not joined\n";
+                    outp += "- !myRoles - lists the roles you are currently in\n";
 
 
                 if(core):
-                    outp += "**Core Commands:**\n" 
-                    outp += "\t!addMembers (@name) (@name2) (...) - adds all the given users to members. Must be of Core role or higher to use\n";
-                    outp += "\t!getRoles (name) - lists the roles the specified user is in\n"
-                    outp += "\t!testChannels - Tests all the channels on the server and pings the author if the bot can write messages in it. This shows what channels are vunerable"
+                    outp += "\n**Core Commands:**\n" 
+                    outp += "- !addMembers (@name) (@name2) (...) - adds all the given users to members. Must be of Core role or higher to use\n";
+                    outp += "- !getRoles (@name) - lists the roles the specified user is in\n"
+                    outp += "- !testChannels - Tests all the channels on the server and pings the author if the bot can write messages in it. This shows what channels are vunerable"
                     
                 outp += "\nIf you find any bugs please tell Chris Heidelberg (AiByte#6141) so he can fix it. Thanks!"
 
@@ -417,8 +416,5 @@ else:
     sys.exit(0);
 
 #Checks if token is valid and boots bot
-try:
-    client.run(TOKEN);
-except:
-    print("\nSomething went wrong in the discord client, if an error is above this message than that is the problem otherwise there is an invalid token in or network" + local + "/token.txt. Or your internet went down")
-    sys.exit(0);    
+client.run(TOKEN);
+  
