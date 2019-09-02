@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-import csv
 import os
 import sys
 
@@ -60,7 +59,7 @@ async def add_role(author, channel, content):
                 await client.send_message(channel, "You joined " + curr_role.name)
                 print(author.name + " joined the role")
 
-            except:
+            except discord.errors.Forbidden:
                 await client.send_message(channel, curr_role.name + " is locked and cannot be joined")
                 print(author.name + " tried to join a restricted role (bot permissions too low)")
 
@@ -78,12 +77,14 @@ async def add_role(author, channel, content):
 async def on_ready():
     global membersRole, serverID, coreRole
 
-    server_roles = None
-    try:
-        server_roles = client.get_server(serverID).roles
-    except:
-        print("Invalid serverID in token.txt file: " + str(serverID))
-        exit(1)
+    get_server = client.get_server(serverID)
+
+    if get_server is None:
+        print("Invalid server ID:" + str(serverID))
+        await client.close()
+        sys.exit()
+
+    server_roles = get_server.roles
 
     # Finds members and core roles
     membersRole = find_role_index("members", server_roles)
@@ -180,7 +181,7 @@ async def on_message(message):
                                 await client.remove_roles(author, author_roles[index])
                                 await client.send_message(channel, "You are no longer in " + author_roles[index].name)
                                 print(author.name + " left " + author_roles[index].name)
-                            except:
+                            except discord.errors.Forbidden:
                                 print("Bot does not have permission to remove role")
                                 await client.send_message(channel, "I cannot remove you from this role")
                         else:
@@ -222,7 +223,6 @@ async def on_message(message):
                     curr_role = server_roles[i]
                     if (i > 0 and find_role_index(curr_role.name, author.roles) == -1 and curr_role.position <
                             message.server.me.roles[bot_role_index].position) and (curr_role != membersRole):
-
                         outp += "\t" + curr_role.name + "\n"
                 if len(outp) > 20:
                     await client.send_message(channel, outp)
@@ -252,7 +252,6 @@ async def on_message(message):
 
                             if content == curr_member.name.lower() or content == curr_member.display_name.lower() or \
                                     content == curr_member.id.lower():
-
                                 name = curr_member.name
                                 user_roles = curr_member.roles
                                 break
@@ -332,7 +331,7 @@ async def on_message(message):
                                 await client.send_message(channels[i], author.mention)
                                 print(channels[i].name + " can be accessed and messaged by bot")
                                 all_secure = False
-                            except:
+                            except discord.errors.Forbidden:
                                 count += 1
 
                     if all_secure:
@@ -372,8 +371,8 @@ async def on_message(message):
                     outp += "**Member Commands:**\n"
                     outp += "- !help (level) - leave arg blank for a list of member commands or use \"core\" to list " \
                             "all commands\n"
-                    outp += "- !join (role) - adds you to the given role. If arg \"all\" is given then it adds you to " \
-                            "all available roles\n"
+                    outp += "- !join (role) - adds you to the given role. If arg \"all\" is given then " \
+                            "it adds you to all available roles\n"
                     outp += "- !leave (role) - removes you from the given role\n"
                     outp += "- !listRoles - lists all joinable roles\n"
                     outp += "- !unjoinedRoles - lists all roles you have not joined\n"
@@ -412,10 +411,10 @@ logCsv = (local + "/LoggedMessages.csv")
 try:
     file = open(local + '/token.txt', 'r')
     info = file.readlines()
-except:
+except FileNotFoundError:
     print("Cant find file \"" + local + "/token.txt\"")
     print("Either it doesnt exist or this program doesnt have permission to access it")
-    sys.exit(0)
+    sys.exit(1)
 
 # Checks to make sure the txt file is populated
 if len(info) == 2:
@@ -427,4 +426,11 @@ else:
     sys.exit(0)
 
 # Checks if token is valid and boots bot
-client.run(TOKEN)
+try:
+    client.run(TOKEN)
+except discord.errors.LoginFailure:
+    print("Invalid bot token in token.txt")
+    sys.exit(0)
+except SystemExit:
+    print("Program forced itself closed")
+
