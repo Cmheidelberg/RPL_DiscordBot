@@ -55,7 +55,7 @@ async def add_role(author, channel, content):
     forbidden_roles = ""
 
     if len(content) > 3:
-        await client.send_message(channel, "Joining many roles at once may take a few moments")
+        await client.send_message(channel, "Joining many roles at once may take a few moments...")
 
     for i in content:
         i = i.lstrip()
@@ -87,13 +87,13 @@ async def add_role(author, channel, content):
             print("Role does not exist")
 
     if len(joined_roles) > 0:
-        outp += "Successfully joined " + joined_roles[:-2] + "\n"
+        outp += "**Successfully joined:** " + joined_roles[:-2] + "\n"
     if len(misnamed_roles) > 0:
-        outp += misnamed_roles[:-2] + " role(s) do not exist\n"
+        outp += "**Could not find roles for: **" + misnamed_roles[:-2] + "\n"
     if len(already_in_roles) > 0:
-        outp += "You are already in " + already_in_roles[:-2] + "\n"
+        outp += "**You are already in:** " + already_in_roles[:-2] + "\n"
     if len(forbidden_roles) > 0:
-        outp += "Locked/ unjoinable roles: " + forbidden_roles[:-2] + "\n"
+        outp += "**Locked/ unjoinable roles:** " + forbidden_roles[:-2] + "\n"
 
     await client.send_message(channel, outp)
 
@@ -133,6 +133,10 @@ async def on_ready():
     else:
         print("Bot needs to be in role \"Bot\"")
         sys.exit(0)
+
+    if find_role_index("all", server_roles) != -1:
+        print("WARNING: There should not be a roles called \"all\" because it will interfere with built "
+              "in function \"!join all\"")
 
     print('Bot is online and active')
 
@@ -386,7 +390,7 @@ async def on_message(message):
                         outp += i.display_name + ","
 
                 if has_nonmember:
-                    await client.send_message(channel, outp)
+                    await client.send_message(channel, outp[:-2])
                 else:
                     await client.send_message(channel, "There are no non-member users in this server")
 
