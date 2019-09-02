@@ -45,32 +45,57 @@ def has_core(author):
 @client.event
 async def add_role(author, channel, content):
     server_roles = author.server.roles
-    index = find_role_index(content, server_roles)
 
-    # Checks to see if role exists
-    if index > 0:
-        curr_role = server_roles[index]
+    content = list(content)
 
-        # This section checks to see if the author is already in the requested role
-        if -1 == find_role_index(curr_role.name, author.roles):
+    outp = ""
+    joined_roles = ""
+    misnamed_roles = ""
+    already_in_roles = ""
+    forbidden_roles = ""
 
-            try:
-                await client.add_roles(author, curr_role)
-                await client.send_message(channel, "You joined " + curr_role.name)
-                print(author.name + " joined the role")
+    if len(content) > 3:
+        await client.send_message(channel, "Joining many roles at once may take a few moments")
 
-            except discord.errors.Forbidden:
-                await client.send_message(channel, curr_role.name + " is locked and cannot be joined")
-                print(author.name + " tried to join a restricted role (bot permissions too low)")
+    for i in content:
+        i = i.lstrip()
+        index = find_role_index(i, server_roles)
+
+        # Checks to see if role exists
+        if index > 0:
+            curr_role = server_roles[index]
+
+            # This section checks to see if the author is already in the requested role
+            if find_role_index(curr_role.name, author.roles) == -1:
+
+                try:
+                    while find_role_index(curr_role.name, author.roles) == -1:
+                        await client.add_roles(author, curr_role)
+                    joined_roles += curr_role.name + ", "
+                    print(author.name + " joined the role")
+
+                except discord.errors.Forbidden:
+                    forbidden_roles += curr_role.name + ", "
+                    print(author.name + " tried to join a restricted role (bot permissions too low)")
+
+            else:
+                print(author.name + " was already in that role")
+                already_in_roles += curr_role.name + ", "
 
         else:
-            print(author.name + " was already in that role")
-            await client.send_message(channel, "You are already in of that role")
+            misnamed_roles += i + ", "
+            print("Role does not exist")
 
-    else:
-        await client.send_message(channel, "That role does not exist")
-        print("Role does not exist")
+    if len(joined_roles) > 0:
+        outp += "Successfully joined " + joined_roles[:-2] + "\n"
+    if len(misnamed_roles) > 0:
+        outp += misnamed_roles[:-2] + " role(s) do not exist\n"
+    if len(already_in_roles) > 0:
+        outp += "You are already in " + already_in_roles[:-2] + "\n"
+    if len(forbidden_roles) > 0:
+        outp += "Locked/ unjoinable roles: " + forbidden_roles[:-2] + "\n"
 
+    await client.send_message(channel, outp)
 
 # detects when bot is ready
 @client.event
@@ -147,19 +172,19 @@ async def on_message(message):
                     # Assigns user all available roles
                     if content == "all":
                         server_roles = channel.server.roles
-
+                        joinable = []
                         for i in range(len(server_roles)):
                             bot_role_index = find_role_index("bot", message.server.me.roles)
 
                             curr_role = server_roles[i]
                             if ((i > 0 and curr_role.position < message.server.me.roles[bot_role_index].position) and (
                                     curr_role != membersRole)):
-                                await client.add_roles(author, curr_role)
+                                joinable.append(curr_role.name)
 
+                        await add_role(author, channel, joinable)
                         print("gave " + author.name + " all available roles")
-                        await client.send_message(channel, "You have been added to all available roles")
-
                     else:
+                        content = content.split(',')
                         await add_role(author, channel, content)
 
                 else:
@@ -345,6 +370,26 @@ async def on_message(message):
                     print(author.name + " doesnt have permission to test channels")
                     await client.send_message(channel, "You need to be a core member to use this command")
 
+            # Lists all users who are not in the members role
+            elif command == "!nonmembers" or command == "!nonmember":
+                print("Listing nonmembers")
+                has_nonmember = False
+                outp = "**Non members:** \n"
+                for i in author.server.members:
+                    memb = False
+                    for j in i.roles:
+                        if j.name.lower() == "member" or j.name.lower() == "members":
+                            memb = True
+                            break
+                    if not memb and not i.bot:
+                        has_nonmember = True
+                        outp += i.display_name + ","
+
+                if has_nonmember:
+                    await client.send_message(channel, outp)
+                else:
+                    await client.send_message(channel, "There are no non-member users in this server")
+
             # Prints out a list of commands that users can execute
             elif command == "!help" or command == "!h":
 
@@ -433,4 +478,3 @@ except discord.errors.LoginFailure:
     sys.exit(0)
 except SystemExit:
     print("Program forced itself closed")
-
