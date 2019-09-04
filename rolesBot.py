@@ -41,6 +41,19 @@ def has_core(author):
     return False
 
 
+def get_user(content, user_list):
+    for i in user_list:
+        if i.display_name.lower() == content.lower() or i.name.lower() == content.lower():
+            return i
+        else:
+            try:
+                if i.nick.lower() == content.lower():
+                    return i
+            except AttributeError:
+                continue
+
+    return -1
+
 # Tries to add the author to the given role
 @client.event
 async def add_role(author, channel, content):
@@ -309,32 +322,40 @@ async def on_message(message):
             # adds all mentioned (@name) users to the members role
             elif command == "!addmembers" or command == "!addmember":
                 print("\n" + author.name + " is trying to add a new member")
-                outp = ''
+                outp = ""
+                added = "Welcome: "
 
                 # if the author has permission to issue this command
                 if has_core(author):
+                    content = content.split(',')
 
-                    added_new_member = False
-                    for i in range(len(message.mentions)):
+                    for i in content:
+                        i = i.lstrip() # Strips any white space so "a,b,c" == "a, b, c"
 
-                        curr_person = message.mentions[i]
-                        # if the user isn't already in the members role
-                        if has_member(curr_person) is False:
-                            print("new member " + curr_person.name + " added")
-                            await client.add_roles(curr_person, membersRole)
-                            added_new_member = True
-                            outp += "Welcome " + curr_person.mention + " to the USCRPL server " + '\n'
+                        # ignore for now if there is an @name
+                        if i[:1] == '@':
+                            break
                         else:
-                            print(curr_person.name + " is already in the members role")
+                            # Check if the given name is a user on the server and makes sure the user to make member
+                            # is not a bot
+                            if get_user(i, server.members) != -1 and not (get_user(i, server.members)).bot:
+                                await client.add_roles(get_user(i, server.members), membersRole)
+                                # Adds new member mention to the output message
+                                added += get_user(i, server.members).mention + ", "
 
-                    if added_new_member is True:
-                        outp += "When you are ready use !listRoles for a list of the joinable roles. Then use !join (" \
-                                "role) to view the different text channels"
                 else:
                     print(author.name + " doesnt have permission to add member")
                     outp = "You don't have permission to add member"
 
                 # sends all updates as one message to prevent delay
+                patch_bool = False
+                if len(added) > 12:
+                    outp = added[:-2] + " to the USCRPL Discord server\n"
+                    patch_bool = True
+
+                # If no members were added display invalid input
+                if not patch_bool:
+                    outp = "Invalid input. Maybe you misspelled their username?"
                 await client.send_message(channel, outp)
 
                 # Tries to message in all text channels. If the bot can message in a channel it is not supposed to then
@@ -390,7 +411,7 @@ async def on_message(message):
                         outp += i.display_name + ","
 
                 if has_nonmember:
-                    await client.send_message(channel, outp[:-2])
+                    await client.send_message(channel, outp[:-1])
                 else:
                     await client.send_message(channel, "There are no non-member users in this server")
 
