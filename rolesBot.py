@@ -330,7 +330,7 @@ async def on_message(message):
                     content = content.split(',')
 
                     for i in content:
-                        i = i.lstrip() # Strips any white space so "a,b,c" == "a, b, c"
+                        i = i.lstrip()  # Strips any white space so "a,b,c" == "a, b, c"
 
                         # ignore for now if there is an @name
                         if i[:1] == '@':
@@ -441,7 +441,7 @@ async def on_message(message):
                     outp += "**Member Commands:**\n"
                     outp += "- !help (level) - leave arg blank for a list of member commands or use \"core\" to list " \
                             "all commands\n"
-                    outp += "- !join (role) - adds you to the given role. If arg \"all\" is given then " \
+                    outp += "- !join (role, role2, ...) - adds you to the given role. If arg \"all\" is given then " \
                             "it adds you to all available roles\n"
                     outp += "- !leave (role) - removes you from the given role\n"
                     outp += "- !listRoles - lists all joinable roles\n"
@@ -450,8 +450,9 @@ async def on_message(message):
 
                 if core:
                     outp += "\n**Core Commands:**\n"
-                    outp += "- !addMembers (@name) (@name2) (...) - adds all the given users to members. Must be of " \
-                            "Core role or higher to use\n"
+                    outp += "- !nonMembers - shows a list of all users in the server who aren't in the members role"
+                    outp += "- !addMembers (name1, name2, ...) - adds all the given users to members. Works with " \
+                            "output of !nonmembers\n"
                     outp += "- !getRoles (@name) - lists the roles the specified user is in\n"
                     outp += "- !testChannels - Tests all the channels on the server and pings the author if the bot " \
                             "can write messages in it. This shows what channels are vulnerable "
