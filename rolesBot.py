@@ -343,20 +343,20 @@ async def on_message(message):
                                 # Adds new member mention to the output message
                                 added += get_user(i, server.members).mention + ", "
 
+                    # sends all updates as one message to prevent delay
+                    patch_bool = False
+                    if len(added) > 12:
+                        outp = added[:-2] + " to the USCRPL Discord server\n"
+                        patch_bool = True
+
+                    # If no members were added display invalid input
+                    if not patch_bool:
+                        outp = "Invalid input. Maybe you misspelled their username?"
+                    await client.send_message(channel, outp)
+
                 else:
                     print(author.name + " doesnt have permission to add member")
-                    outp = "You don't have permission to add member"
-
-                # sends all updates as one message to prevent delay
-                patch_bool = False
-                if len(added) > 12:
-                    outp = added[:-2] + " to the USCRPL Discord server\n"
-                    patch_bool = True
-
-                # If no members were added display invalid input
-                if not patch_bool:
-                    outp = "Invalid input. Maybe you misspelled their username?"
-                await client.send_message(channel, outp)
+                    await client.send_message(channel, "You don't have permission to add member")
 
                 # Tries to message in all text channels. If the bot can message in a channel it is not supposed to then
                 # that channel is vulnerable
@@ -393,27 +393,31 @@ async def on_message(message):
 
                 else:
                     print(author.name + " doesnt have permission to test channels")
-                    await client.send_message(channel, "You need to be a core member to use this command")
+                    await client.send_message(channel, "You are not authorized to use this command")
 
             # Lists all users who are not in the members role
             elif command == "!nonmembers" or command == "!nonmember":
-                print("Listing nonmembers")
-                has_nonmember = False
-                outp = "**Non members:** \n"
-                for i in author.server.members:
-                    memb = False
-                    for j in i.roles:
-                        if j.name.lower() == "member" or j.name.lower() == "members":
-                            memb = True
-                            break
-                    if not memb and not i.bot:
-                        has_nonmember = True
-                        outp += i.display_name + ","
+                if has_core(author):
+                    print("Listing nonmembers")
+                    has_nonmember = False
+                    outp = "**Non members:** \n"
+                    for i in author.server.members:
+                        memb = False
+                        for j in i.roles:
+                            if j.name.lower() == "member" or j.name.lower() == "members":
+                                memb = True
+                                break
+                        if not memb and not i.bot:
+                            has_nonmember = True
+                            outp += i.display_name + ","
 
-                if has_nonmember:
-                    await client.send_message(channel, outp[:-1])
+                    if has_nonmember:
+                        await client.send_message(channel, outp[:-1])
+                    else:
+                        await client.send_message(channel, "There are no non-member users in this server")
                 else:
-                    await client.send_message(channel, "There are no non-member users in this server")
+                    print(author.name + " doesnt have permission to list non members")
+                    await client.send_message(channel, "You are not authorized to use this command")
 
             # Prints out a list of commands that users can execute
             elif command == "!help" or command == "!h":
@@ -439,7 +443,7 @@ async def on_message(message):
 
                 if member:
                     outp += "**Member Commands:**\n"
-                    outp += "- !help (level) - leave arg blank for a list of member commands or use \"core\" to list " \
+                    outp += "- !help (level) - leave arg blank for a list of member commands or use \"all\" to list " \
                             "all commands\n"
                     outp += "- !join (role, role2, ...) - adds you to the given role. If arg \"all\" is given then " \
                             "it adds you to all available roles\n"
@@ -449,7 +453,7 @@ async def on_message(message):
                     outp += "- !myRoles - lists the roles you are currently in\n"
 
                 if core:
-                    outp += "\n**Core Commands:**\n"
+                    outp += "\n**Moderator Commands:**\n"
                     outp += "- !nonMembers - shows a list of all users in the server who aren't in the members role"
                     outp += "- !addMembers (name1, name2, ...) - adds all the given users to members. Works with " \
                             "output of !nonmembers\n"
