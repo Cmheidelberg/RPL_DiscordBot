@@ -329,7 +329,21 @@ async def on_message(message):
                 if has_core(author):
                     content = content.split(',')
 
+                    # this turns any user mentions (@user) into a name the script can handel
+                    # O(n) inefficient but it saves me time to do it this way so I can get the other 50 tasks
+                    # that need doing done
+                    tmpCont = []
+                    useAt = False
+                    for u in message.mentions:
+                        useAt = True
+                        tmpCont.append(u.name)
+
+                    if useAt:
+                        print("Using mentions instead of input string")
+                        content = tmpCont
+
                     for i in content:
+                        print(i)
                         i = i.lstrip()  # Strips any white space so "a,b,c" == "a, b, c"
 
                         # ignore for now if there is an @name
