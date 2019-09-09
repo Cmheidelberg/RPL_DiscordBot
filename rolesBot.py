@@ -67,9 +67,6 @@ async def add_role(author, channel, content):
     already_in_roles = ""
     forbidden_roles = ""
 
-    if len(content) > 3:
-        await client.send_message(channel, "Joining many roles at once may take a few moments...")
-
     for i in content:
         i = i.lstrip()
         index = find_role_index(i, server_roles)
@@ -100,11 +97,11 @@ async def add_role(author, channel, content):
             print("Role does not exist")
 
     if len(joined_roles) > 0:
-        outp += "**Successfully joined:** " + joined_roles[:-2] + "\n"
+        outp += "**" + author.display_name + " Successfully joined:** " + joined_roles[:-2] + "\n"
     if len(misnamed_roles) > 0:
         outp += "**Could not find roles for: **" + misnamed_roles[:-2] + "\n"
-    if len(already_in_roles) > 0:
-        outp += "**You are already in:** " + already_in_roles[:-2] + "\n"
+    # if len(already_in_roles) > 0:
+        # outp += "**" + author.display_name + " is already in:** " + already_in_roles[:-2] + "\n"
     if len(forbidden_roles) > 0:
         outp += "**Locked/ unjoinable roles:** " + forbidden_roles[:-2] + "\n"
 
@@ -180,33 +177,51 @@ async def on_message(message):
             # ----------------------------------------------------------------------------------------
 
             # Tries to give the author user the specified role
-            if command == "!join":
+            if command == "!join" or command == "!add":
                 print("\nAttempting to give " + author.name + " a role: " + content)
 
-                # checks if user gave an argument
-                if len(content) > 0:
-
-                    # Assigns user all available roles
-                    if content == "all":
-                        server_roles = channel.server.roles
-                        joinable = []
-                        for i in range(len(server_roles)):
-                            bot_role_index = find_role_index("bot", message.server.me.roles)
-
-                            curr_role = server_roles[i]
-                            if ((i > 0 and curr_role.position < message.server.me.roles[bot_role_index].position) and (
-                                    curr_role != membersRole)):
-                                joinable.append(curr_role.name)
-
-                        await add_role(author, channel, joinable)
-                        print("gave " + author.name + " all available roles")
-                    else:
-                        content = content.split(',')
-                        await add_role(author, channel, content)
-
+                users_to_add = []
+                if len(message.mentions) > 0:
+                    users_to_add = message.mentions
                 else:
-                    await client.send_message(channel, "Must provide at least one argument")
-                    print(author.name + " used join without arguments")
+                    users_to_add.append(author)
+
+                print(users_to_add)
+
+                content = content.split(' ')
+                print(content)
+                content = content[-1]
+                content = content.split(',')
+                print(content)
+
+                if len(content) > 3:
+                    await client.send_message(channel, "Joining many roles at once may take a few moments...")
+
+                for a in users_to_add:
+
+                    # checks if user gave an argument
+                    if len(content) > 0:
+
+                        # Assigns user all available roles
+                        if content[0] == "all":
+                            server_roles = channel.server.roles
+                            joinable = []
+                            for i in range(len(server_roles)):
+                                bot_role_index = find_role_index("bot", message.server.me.roles)
+
+                                curr_role = server_roles[i]
+                                if ((i > 0 and curr_role.position < message.server.me.roles[bot_role_index].position) and (
+                                        curr_role != membersRole)):
+                                    joinable.append(curr_role.name)
+
+                            await add_role(a, channel, joinable)
+                            print("gave " + a.name + " all available roles")
+                        else:
+                            await add_role(a, channel, content)
+
+                    else:
+                        await client.send_message(channel, "Must provide at least one argument")
+                        print(a.name + " used join without arguments")
 
             # Tries to remove the author from a specified role
             elif command == "!leave":
@@ -468,9 +483,9 @@ async def on_message(message):
 
                 if core:
                     outp += "\n**Moderator Commands:**\n"
-                    outp += "- !nonMembers - shows a list of all users in the server who aren't in the members role"
-                    outp += "- !addMembers (name1, name2, ...) - adds all the given users to members. Works with " \
-                            "output of !nonmembers\n"
+                    outp += "- !nonMembers - shows a list of all users in the server who aren't in the members role\n"
+                    outp += "- !addMembers name1, name2, ... - adds all the given users to members. Works with " \
+                            "output of !nonmembers. Will also work with the users @ handle\n"
                     outp += "- !getRoles (@name) - lists the roles the specified user is in\n"
                     outp += "- !testChannels - Tests all the channels on the server and pings the author if the bot " \
                             "can write messages in it. This shows what channels are vulnerable "
