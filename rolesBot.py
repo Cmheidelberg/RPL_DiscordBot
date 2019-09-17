@@ -71,6 +71,9 @@ async def add_role(author, channel, content):
         i = i.lstrip()
         index = find_role_index(i, server_roles)
 
+        if author.bot:
+            await client.send_message(channel, "Cannot add bot to roles")
+            return
         # Checks to see if role exists
         if index > 0:
             curr_role = server_roles[index]
@@ -100,8 +103,8 @@ async def add_role(author, channel, content):
         outp += "**" + author.display_name + " Successfully joined:** " + joined_roles[:-2] + "\n"
     if len(misnamed_roles) > 0:
         outp += "**Could not find roles for: **" + misnamed_roles[:-2] + "\n"
-    # if len(already_in_roles) > 0:
-        # outp += "**" + author.display_name + " is already in:** " + already_in_roles[:-2] + "\n"
+    if len(already_in_roles) > 0:
+        outp += "**" + author.display_name + " is already in:** " + already_in_roles[:-2] + "\n"
     if len(forbidden_roles) > 0:
         outp += "**Locked/ unjoinable roles:** " + forbidden_roles[:-2] + "\n"
 
@@ -190,11 +193,18 @@ async def on_message(message):
 
                 content = content.split(' ')
                 print(content)
-                content = content[-1]
-                content = content.split(',')
+                add_roles = ""
+                for i in content:
+                    print("forloop: " + str(i))
+                    try:
+                        if i[1] != "@":
+                            add_roles += str(i)
+                    except IndexError:
+                        continue
+                content = add_roles.split(',')
                 print(content)
 
-                if len(content) > 3:
+                if len(content) > 3 or content == "all":
                     await client.send_message(channel, "Joining many roles at once may take a few moments...")
 
                 for a in users_to_add:
@@ -499,7 +509,8 @@ async def on_message(message):
 
         else:
             print("\na non-member \"" + author.name + "\" tried to use a bot command")
-            await client.send_message(channel, "You must be a member before you can use the bot")
+            await client.send_message(channel, "You must be a member before you can use the bot. "
+                                               "Please wait for your a team leader to add you as member")
 
         # -------------------------------------------------------------------------------------------------------------
 
